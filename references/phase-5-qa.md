@@ -1,6 +1,6 @@
 # Phase 5 — QA (dual: machine gates + human eye)
 
-Two stages, in order. Machine first (cheap, objective), human second (the 80% judgement).
+Two stages, in order. Machine first (cheap, objective), human second (the fidelity judgement).
 
 ## Stage 1 — Hard gates (all must be green, no exceptions)
 
@@ -33,9 +33,9 @@ Run `npm run dev` and click through the built screens the same way Phase 1 swept
 
 Anything undeclared that the original does = a spec gap → back to Phase 2 for that section (small loop, not a full restart).
 
-## Stage 3 — Visual-diff sensor (diagnostic, NOT a gate)
+## Stage 3 — Visual-diff sensor (diagnostic + fidelity meter, NOT a gate)
 
-For every screen, point the sensor at the original capture vs a fresh clone screenshot (same viewport):
+For every screen, point the sensor at the original capture vs a fresh clone screenshot (same viewport). `--target` comes from the route's `fidelityTarget` (default **90**):
 
 ```bash
 node .claude/skills/web-clone/scripts/visual-diff.mjs \
@@ -43,14 +43,33 @@ node .claude/skills/web-clone/scripts/visual-diff.mjs \
   --clone    <fresh clone screenshot> \
   --out      _webclone/captures/home/diff.json \
   --diff     _webclone/captures/home/diff.png \
-  --report   _webclone/captures/home/diff.md
+  --report   _webclone/captures/home/diff.md \
+  --target   90
 ```
 
-The report lists deviation clusters in **page coordinates** and flags **likely-empty regions** (clone renders flat where the original has texture = probably a missing media slot). Diagnose each cluster: cross-reference its box against the route's `media.json` `dom.box` entries — an overlapping slot with no promoted file is a Phase 2 selection gap or a promote error; a filled slot means a layout gap for the builder. The sensor never passes or fails a screen — it builds the punch list the human eye verifies in Stage 4.
+The report gives a **fidelity score** (100 − changed-pixel %) vs the target, and lists deviation clusters in **page coordinates** ranked **fix-first** (area × changed-ratio), flagging **likely-empty regions** (clone renders flat where the original has texture = probably a missing media slot). Diagnose each cluster: cross-reference its box against the route's `media.json` `dom.box` entries — an overlapping slot with no promoted file is a Phase 2 selection gap or a promote error; a filled slot means a layout gap for the builder. The sensor never passes or fails a screen — it builds the punch list the ascent loop (Stage 3b) works through and the human eye verifies in Stage 4.
 
-## Stage 4 — Side-by-side album (the 80% verdict)
+## Stage 3b — Fidelity ascent loop (≤ 3 rounds per route)
 
-Build `_webclone/album/index.html`: for every screen × viewport, the original capture next to a fresh screenshot of the clone (same viewport), with each screen's sensor clusters linked beside it. The HUMAN makes the 80% call by eye — there is no numeric diff gate, by design. Record each verdict in the album (pass / needs-work + one-line reason).
+The 90/100 rule in motion: fidelity climbs toward the route's target **while the two invariants hold** — (a) gates green (A1–A8, lint, tsc, test), (b) route < 300 KB gzip. Per route:
+
+```
+round 1..3:
+  1. SENSE   — run visual-diff --target <route fidelityTarget>; read score + fix-first clusters
+  2. STOP?   — score ≥ target → done · no cluster left unexplained → done
+  3. FIX     — builder fixes the top-priority clusters the REPO-IDIOMATIC way
+               (extract a component, flex/grid, token, higher-res variant within budget)
+  4. RE-GATE — lint + tsc + test + gates + budget check.
+               ANY red or budget blown → REVERT that fix, record why in the ascent log,
+               mark the cluster "accepted gap" (fidelity never buys a gate violation)
+  5. PLATEAU — score did not improve vs last round → stop (diminishing returns)
+```
+
+Log every round in the run report: `route · round · fidelity % · top cluster fixed · gates/budget · decision (continue / accepted gap / target reached / plateau)`. Three rounds is the hard cap — the remaining gap goes to the human verdict as explained clusters, never as silent approximations.
+
+## Stage 4 — Side-by-side album (the human verdict)
+
+Build `_webclone/album/index.html`: for every screen × viewport, the original capture next to a fresh screenshot of the clone (same viewport), with each screen's sensor clusters + ascent log linked beside it. The HUMAN makes the final call by eye — there is no numeric diff gate, by design. Record each verdict in the album (pass / needs-work + one-line reason).
 
 ## Definition of done — per screen checklist
 
@@ -63,7 +82,9 @@ Build `_webclone/album/index.html`: for every screen × viewport, the original c
 - [ ] ≥ 30 fps on the mid-range Android device; reduced-motion verified
 - [ ] interaction sweep findings match spec declarations
 - [ ] visual-diff sensor report reviewed — every likely-empty cluster explained
-- [ ] album entry exists; human 80% verdict = pass
+- [ ] fidelity ≥ route's `fidelityTarget`, OR ascent loop ran its rounds and every remaining cluster is an explained, accepted gap
+- [ ] ascent log in run report (per round: score, fix, gates/budget, decision)
+- [ ] album entry exists; human verdict = pass
 - [ ] no credentials anywhere in repo, code, logs, or album
 
 ## Two-stage review (repo CLAUDE.md)
@@ -72,4 +93,4 @@ Before handing over: (1) **spec compliance** — does it do what the approved De
 
 ## Run report
 
-Write `_webclone/run-report.md`: screens built, gates status, per-route bundle sizes vs budget, promoted media slots + open TODOs, sensor findings (each likely-empty cluster explained), jscpd summary, device-test results, album verdicts, spec gaps found and how resolved, deferred players (v1.1). This is what the user reads first.
+Write `_webclone/run-report.md`: screens built, gates status, per-route bundle sizes vs budget, promoted media slots + open TODOs, sensor findings (each likely-empty cluster explained), **the per-route ascent log (target, rounds, final fidelity, accepted gaps)**, jscpd summary, device-test results, album verdicts, spec gaps found and how resolved, deferred players (v1.1). This is what the user reads first.

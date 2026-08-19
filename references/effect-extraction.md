@@ -34,7 +34,7 @@ locate render surface → capture minimal truth → RAW REPLAY (smallest as-is r
 
 - **RAW REPLAY**: a minimal runnable reproduction using the real captured draw calls / shaders / uniforms / vertex data. No optimization, no framework swap, no parameter changes.
 - **Baseline gate**: the RAW REPLAY must match the original frame-by-frame (or sampled frames) BEFORE any restructuring is allowed.
-- **Projectize**: only then rewrite in the repo's idioms (this is also where the 80/100 bar and gates A6/A7 apply — transform/opacity only, reduced-motion honored).
+- **Projectize**: only then rewrite in the repo's idioms (this is also where the 90/100 ascent rule and gates A6/A7 apply — transform/opacity only, reduced-motion honored).
 - Close with an honest status: `DONE_BASELINE_VERIFIED` / `DONE_PROJECTIZED` / `DONE_BASELINE_WITH_GAPS` (gaps listed).
 
 ## 4. Runtime capture fallback (when no source exists)

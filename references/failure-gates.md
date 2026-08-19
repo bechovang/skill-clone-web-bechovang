@@ -4,7 +4,9 @@ Every builder reads this file BEFORE writing code. These are not hypothetical: a
 
 ## The root pattern
 
-AI clones transcribe what they can see (rendered DOM, computed CSS) instead of **translating** the design into this repo's idioms (component reuse, flex/grid intent, theme tokens, form architecture). Transcription produces code that *looks like* the original's HTML — which is exactly what this repo does not want. The 80/100 rule exists because stopping the pursuit of pixel-perfection is what removes the incentive to transcribe.
+AI clones transcribe what they can see (rendered DOM, computed CSS) instead of **translating** the design into this repo's idioms (component reuse, flex/grid intent, theme tokens, form architecture). Transcription produces code that *looks like* the original's HTML — which is exactly what this repo does not want. The 90/100 ascent rule exists for the same reason: unbounded pixel-pursuit is what creates the incentive to transcribe, so fidelity climbs only through the ascent loop — bounded by the two invariants (gates green + route budget) and capped at 3 rounds per route.
+
+**Fidelity never buys a gate violation.** A visual gap closed with a `[&…]` selector, an inline style, an arbitrary color, a >320-line file, or an oversized bundle is not a win — it is a class A failure wearing fidelity as a disguise. Redo it the idiomatic way, or accept the gap and record it in the run report's ascent log.
 
 ## Disease classes → gates
 

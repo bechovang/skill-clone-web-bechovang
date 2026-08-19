@@ -1,4 +1,4 @@
-# web-clone — xưởng clone theo chuẩn 80/100
+# web-clone — xưởng clone theo chuẩn 90/100
 
 > 🇻🇳 Tiếng Việt · [🇬🇧 English](./README.md)
 
@@ -8,16 +8,16 @@ Một [skill của Claude Code](https://claude.com/claude-code) clone **frontend
 
 ---
 
-## "80/100" nghĩa là gì (triết lý lõi)
+## "90/100" nghĩa là gì (triết lý lõi)
 
 | Nguyên tắc | Ý nghĩa |
 |---|---|
-| **~80% độ giống thị giác** | Đủ gần để không ai phải nhìn lần hai. Không gần hơn — pixel-perfect bị loại khỏi phạm vi một cách có chủ đích. |
-| **100% code idiom** | Output pass lint của bạn, gates cấu trúc của bạn, quy ước component của bạn. Ưu tiên tái sử dụng (shadcn/ui / component sẵn có) hơn là copy CSS tự viết. |
-| **Budget thắng fidelity** | Route vượt budget JS (mặc định < 300 KB gzip) ⇒ giảm trọng lượng animation và độ giống — không bao giờ đánh đổi ngược lại. |
+| **Target fidelity 90 — leo thang, không phải trần** | Fidelity là biến số với target mặc định toàn cục **90** (Phase 2 override từng route 80–98). **Vòng leo fidelity** ở Phase 5 (tối đa 3 vòng/route) đẩy mỗi route lên target của nó. |
+| **100% code idiom — bất biến** | Output pass lint của bạn, gates cấu trúc của bạn, quy ước component của bạn. Ưu tiên tái sử dụng (shadcn/ui / component sẵn có) hơn là copy CSS tự viết. **Lợi thế fidelity nào phá gate sẽ bị từ chối.** |
+| **Budget thắng fidelity — bất biến** | Route vượt budget JS (mặc định < 300 KB gzip) ⇒ giảm trọng lượng animation và độ giống — không bao giờ đánh đổi ngược lại. |
 | **Máy hơn lời hứa** | Thứ gì máy kiểm tra được là HARD GATE (`scripts/gates.ts`), không bao giờ chỉ là lời khuyên. Terminal xanh, chứ không phải "tôi đã theo đúng quy tắc". |
 | **Spec trước code** | Không section nào được build khi chưa có spec được duyệt. Không ngoại lệ. |
-| **Pixel-diff = cảm biến, không phải gate** | `visual-diff.mjs` chỉ cho mắt người biết NHÌN ĐÂU (cụm lệch, vùng nghi ngờ trống). Phán quyết 80% thuộc về con người. |
+| **Pixel-diff = đồng hồ + cảm biến, không phải gate** | `visual-diff.mjs` chấm điểm fidelity (100 − % pixel lệch) làm đồng hồ tiến độ của vòng leo, và chỉ cho mắt người biết NHÌN ĐÂU (cụm lệch xếp hạng sửa-trước, vùng nghi ngờ trống). Phán quyết thuộc về con người. |
 
 ## Tầng media (tính năng đợt 2026-08)
 
@@ -32,7 +32,7 @@ capture ──► stage ──────► name ─────────�
 2. **Stage một lần** — `download.mjs` là một pass *riêng*, replay `storageState` của lần crawl (asset CDN sau đăng nhập vẫn tải được) vào **kho băm theo nội dung**: `_webclone/staging/{hash2}/{sha256}.{ext}`. Một file cho một asset duy nhất, dedup xuyên suốt các route. sha256 là định danh ổn định — đổi tên slot không bao giờ phải tải lại.
 3. **Đặt tên ngữ nghĩa** — script không bao giờ tự đặt tên. Script chỉ ghi evidence thô cho từng item: route, states, tag, CSS selector, toạ độ box trên trang, alt, section gần nhất, kích thước natural, bytes/content-type từ network. AI (hoặc người) đọc `media-index.md` được sinh tự động rồi viết `media-selections.json` với **tên slot ngữ nghĩa** — `hero-main`, `practice-card-thumb` — không bao giờ "ảnh thứ 3 trong div thứ 7".
 4. **Ship có chọn lọc** — capture-all ≠ ship-all. `promote.mjs` chỉ copy những slot spec đã duyệt vào `public/clone-assets/{route}/{slot}.{ext}` (chính filesystem là manifest khi ship) và cảnh báo từng route khi vượt 300 KB.
-5. **Cảm biết lỗ hổng** — `visual-diff.mjs` gom lệch pixel thành các cụm có toạ độ trang và đánh dấu **vùng nghi ngờ render trống** (bản clone phẳng lừ nơi bản gốc có kết cấu = khả năng thiếu media slot). Mỗi cụm đối chiếu được với box trong `media.json` của route, nên một "lỗ" được chẩn đoán deterministic: *thiếu selection / promote lỗi / TODO đã chấp nhận*.
+5. **Cảm biết lỗ hổng + đo điểm** — `visual-diff.mjs` chấm fidelity (100 − % pixel lệch) so với `--target` (mặc định 90), gom lệch pixel thành các cụm xếp hạng sửa-trước theo toạ độ trang, và đánh dấu **vùng nghi ngờ render trống** (bản clone phẳng lừ nơi bản gốc có kết cấu = khả năng thiếu media slot). Mỗi cụm đối chiếu được với box trong `media.json` của route, nên một "lỗ" được chẩn đoán deterministic: *thiếu selection / promote lỗi / TODO đã chấp nhận*.
 
 Slot media không có asset nào thu được sẽ render **placeholder `TODO` có đánh dấu** — không bao giờ bị thay im lặng bằng icon chế ra (lỗi class D).
 
@@ -45,7 +45,7 @@ Slot media không có asset nào thu được sẽ render **placeholder `TODO` c
 | **2 Design Model** | design tokens + một spec mỗi section (ý đồ layout, ánh xạ component, state 3 tầng, loại effect, request budget) + **media selections** (đặt tên slot). PR cho người duyệt — rồi đóng băng | `references/phase-2-design-model.md` |
 | **3 Build** | nền trước (tokens → promote media → primitive shadcn → inventory dùng chung → motion primitive → mocks), sau đó N builder theo section trong git worktree cách ly | `references/phase-3-build.md` |
 | **4 Assembly** | thứ tự merge deterministic, chạy gates sau mỗi lần merge, nối ROUTES/sitemap/metadata | `references/phase-4-assembly.md` |
-| **5 QA** | hard gates → quét tương tác → báo cáo cảm biến visual-diff → album song song cho người phán 80% | `references/phase-5-qa.md` |
+| **5 QA** | hard gates → quét tương tác → cảm biến visual-diff + **vòng leo fidelity** (sense → fix → chạy lại gates, ≤ 3 vòng/route) → album song song cho người phán cuối | `references/phase-5-qa.md` |
 
 ## Danh mục script
 
@@ -56,7 +56,7 @@ Script harvest là **`.mjs` chạy độc lập** — `node` thuần, không bui
 | `scripts/orchestrator.mjs` | Pass capture CHÍNH. Mỗi route × state × viewport: settle (quét scroll), ghi lại mọi request, quét media DOM, screenshot/HTML/text, screenshot chuỗi state. Ra từng route `media.json`, `storage-state.json`, `recon.json` |
 | `scripts/download.mjs` | Pass tải riêng, có auth → kho sha256 → ghi chú ngược vào `media.json` → sinh lại `media-index.md` |
 | `scripts/promote.mjs` | Đưa `media-selections.json` vào ship → `public/clone-assets/{route}/{slot}.{ext}` + `manifest.json`; cảnh báo bytes từng route |
-| `scripts/visual-diff.mjs` | Cảm biến chẩn đoán: diff pixel canvas → cụm lệch (toạ độ trang) + heuristic render-trống → JSON + PNG diff + báo cáo markdown |
+| `scripts/visual-diff.mjs` | Đồng hồ fidelity + cảm biến chẩn đoán: điểm % so với `--target 90`, diff pixel canvas → cụm lệch xếp hạng sửa-trước (toạ độ trang) + heuristic render-trống → JSON + PNG diff + báo cáo markdown — không bao giờ là gate |
 | `scripts/network-capture.mjs` | Bắt fixture XHR/fetch (nguồn mock-data cho API của SPA) |
 | `scripts/interaction-probe.mjs` | Tự động quét scroll/hover/click an toàn/kéo canvas kèm bằng chứng đổi trạng thái — cho màn hình chưa rõ |
 | `scripts/sourcemap-hunt.mjs` | Tìm + tải source map từ các URL script đã ghi nhận |
@@ -144,18 +144,19 @@ node .claude/skills/web-clone/scripts/download.mjs
 # Phase 3 — dispatcher promote media một lần, rồi các builder làm trong worktree:
 node .claude/skills/web-clone/scripts/promote.mjs
 
-# Phase 5 — báo cáo cảm biến mỗi màn hình:
+# Phase 5 — cảm biến + điểm fidelity mỗi màn hình (vòng leo theo sau báo cáo):
 node .claude/skills/web-clone/scripts/visual-diff.mjs \
   --original _webclone/captures/home/desktop.png --clone <clone-shot.png> \
   --out _webclone/captures/home/diff.json --diff _webclone/captures/home/diff.png \
-  --report _webclone/captures/home/diff.md
+  --report _webclone/captures/home/diff.md \
+  --target 90
 ```
 
 ## Các class lỗi skill này tồn tại để ngăn
 
 | Class | Bệnh | Thực thi |
 |---|---|---|
-| **A** | Chép / phạm DRY (build lại cái đã có, arbitrary variants, inline style, nesting sâu) | HARD gates A1–A8 trong `gates.ts` |
+| **A** | Chép / phạm DRY (build lại cái đã có, arbitrary variants, inline style, nesting sâu) | HARD gates A1–A8 trong `gates.ts` — và fidelity KHÔNG BAO GIỜ mua được gate: bản fix leo fidelity làm gate đỏ sẽ bị revert và ghi nhận là khoảng trống đã chấp nhận |
 | **B** | Kiến trúc nửa vời (state không khai báo, thiếu validation) | SOFT ở spec (Phase 2 từ chối) + HARD ở review 2 tầng |
 | **C** | Giảm chất lượng âm thầm (sót a11y, `any`, nợ lint) | HARD: jsx-a11y + lint + tsc sạch |
 | **D** | Chế media (đ substitute icon vào chỗ thiếu asset) | SOFT: spec phải ánh xạ mọi bề mặt vào slot; HARD: các TODO được liệt kê, mọi cụm "nghi trống" từ cảm biến đều được giải trình |
@@ -165,6 +166,7 @@ node .claude/skills/web-clone/scripts/visual-diff.mjs \
 - **Quy trình** (phases, gates, specs, builder worktree): xây 17–18/08/2026 cho repo `english-learning-app-fe`.
 - **Công cụ harvest**: chuyển thể từ `claude-skill-web-clone` v1.6 mã nguồn mở của jane/xiaoer (giữ và port 4 script: network-capture, interaction-probe, sourcemap-hunt, visual-diff; bỏ 4 script ngoài mục tiêu 80/100: init-clone, dna-scaffold, mirror-site, audit-clone). Upstream không có file LICENSE — attribution được giữ lại ở đây một cách có chủ đích; đừng trình bày fork này như tác phẩm của upstream.
 - **Tầng media + việc gộp skill**: hội tụ qua 2 buổi brainstorm BMAD ngày 19/08/2026 (manifest slot-first, capture-all/ship-select, kho hash, sensor-not-gate). Hồ sơ quyết định đầy đủ: `brain-webclone-media-manifest-2026-08-19/brainstorm-intent.md` trong workspace gốc.
+- **Luật leo 90/100** (20/08/2026): mức 80% là phương tiện (code sạch + bundle ổn), không phải mục đích — nên fidelity thành target **90** được leo bằng vòng lặp có chặn, với code sạch và budget là 2 bất biến không thương lượng.
 - **Chưa kiểm chứng thực tế**: selector đăng nhập (`// VERIFY`) và bộ từ vựng `states[]` được viết riêng cho từng target ở Phase 1 — tầng này đã pass kiểm tra cú pháp/khởi động (`node --check`, `--help`) nhưng lần chạy thật đầu tiên là milestone tiếp theo.
 
 ## Bản quyền

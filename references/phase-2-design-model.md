@@ -20,6 +20,8 @@ One file per section chunk, from `templates/section-spec.md`, into `_webclone/de
 - evidence grade per non-obvious detail (SOURCE / PARTIAL / GUESS)
 - the reuse check performed (gate A5): which existing components were searched and considered
 
+Each spec's header also records its route's **`fidelityTarget`** (global default **90**; override in `screen-inventory.md` — 80 for low-value utility routes, 95–98 for hero/landing). This is the number Phase 5's ascent loop pushes toward; it changes behavior, not ambition: a higher target justifies higher-res media variants and more ascent rounds, but NEVER a gate violation or a budget breach.
+
 ## 2b. Shared-component inventory (fixes the duplication failure)
 
 Before chunk specs are frozen, scan all section specs for components that repeat across sections (cards, badges, buttons, shells). Record them in `_webclone/design-model/inventory.md`: component → sections using it → the foundation chunk that builds it. Everything in the inventory is built ONCE in Phase 3's foundation chunk; section builders import from the barrel and may not create their own variant. This inventory is the Phase 2 answer to the observed failure of parallel builders re-creating the same component three times.
@@ -35,7 +37,7 @@ Scripts gathered RAW evidence in Phase 1 — this is where it becomes semantic. 
 Rules:
 
 - **Slot names are semantic** — `hero-main`, `practice-card-thumb`, `mission-banner` — never `img-04` or "3rd image in 7th div" (the manifest already carries DOM coordinates; the name carries MEANING).
-- Pick the right variant: for srcset/DPR families prefer the variant matching the layout's render size (check `naturalW×naturalH` in the index) — not blindly the largest.
+- Pick the right variant: for srcset/DPR families prefer the variant matching the layout's render size (check `naturalW×naturalH` in the index) — not blindly the largest. A high route `fidelityTarget` (95+) may justify the next variant up (sharper at same layout size), **within** the route's remaining 300 KB budget — the budget always wins.
 - **Every media surface a spec renders must resolve to a slot here.** A slot with no harvested asset stays in the spec as a marked `TODO` placeholder (failure class D) — never fabricate a substitute.
 - Font/lottie/network-only items get slots too (`font-display`, `lottie-reward`) — the manifest's `dom` may be null for them; the hash is the identity.
 - Cross-route duplicates share one hash — if two routes need the same asset, write both entries; promote copies per route (or hoist to `shared/` when the spec reuses one component).
@@ -58,4 +60,4 @@ Open a PR containing tokens + specs + chunks.md. The user (or their lead) review
 
 ## Done when
 
-Tokens complete · every non-player route fully covered by approved specs (state 3-layer + effect types + budget requests declared) · inventory.md lists every cross-section component · `media-selections.json` names a slot for every media surface the specs render · chunks.md satisfies all 3 principles · PR approved. → Phase 3.
+Tokens complete · every non-player route fully covered by approved specs (state 3-layer + effect types + budget requests declared) · every spec carries its route's `fidelityTarget` (default 90) · inventory.md lists every cross-section component · `media-selections.json` names a slot for every media surface the specs render · chunks.md satisfies all 3 principles · PR approved. → Phase 3.

@@ -1,4 +1,4 @@
-# web-clone — the 80/100 clone factory
+# web-clone — the 90/100 clone factory
 
 > 🇬🇧 English · [🇻🇳 Tiếng Việt](./README.vi.md)
 
@@ -8,16 +8,16 @@ Built and battle-designed against `exam.flyer.us` (a login-gated Vue site) for a
 
 ---
 
-## What "80/100" means (the core philosophy)
+## What "90/100" means (the core philosophy)
 
 | Rule | Meaning |
 |---|---|
-| **~80% visual fidelity** | Close enough that nobody double-takes. No closer — pixel-perfection is deliberately out of scope. |
-| **100% idiomatic code** | Output passes your lint, your structural gates, your component conventions. Reuse-first (shadcn/ui / your own components) over copied custom CSS. |
-| **Budget beats fidelity** | A route over its JS budget (default < 300 KB gzip) loses animation weight and fidelity — never the other way around. |
+| **90% fidelity target — ascent, not a cap** | Fidelity is a variable with a global default target of **90** (per-route override 80–98 in Phase 2). The Phase 5 **ascent loop** (≤ 3 rounds/route) pushes each route toward its target. |
+| **100% idiomatic code — invariant** | Output passes your lint, your structural gates, your component conventions. Reuse-first (shadcn/ui / your own components) over copied custom CSS. **A fidelity gain that breaks a gate is rejected.** |
+| **Budget beats fidelity — invariant** | A route over its JS budget (default < 300 KB gzip) loses animation weight and fidelity — never the other way around. |
 | **Machine over promises** | Anything machine-checkable is a HARD GATE (`scripts/gates.ts`), never advice. A green terminal, not "I followed the rules". |
 | **Spec before code** | No section is built without an approved spec. Ever. |
-| **Pixel-diff = sensor, never a gate** | `visual-diff.mjs` tells the human eye WHERE to look (deviation clusters, likely-empty regions). The 80% verdict belongs to a person. |
+| **Pixel-diff = meter + sensor, never a gate** | `visual-diff.mjs` scores fidelity (100 − changed-pixel %) as the ascent loop's progress meter and tells the human eye WHERE to look (fix-first clusters, likely-empty regions). The verdict belongs to a person. |
 
 ## The media layer (the 2026-08 feature)
 
@@ -32,7 +32,7 @@ capture ──► stage ──────► name ─────────�
 2. **Stage once** — `download.mjs` is a *separate* pass that replays the crawl's `storageState` (login-gated CDN assets download fine) into a **content-hash store**: `_webclone/staging/{hash2}/{sha256}.{ext}`. One file per unique asset, deduped across routes. The sha256 is the stable identity — renaming a slot never re-downloads anything.
 3. **Name semantically** — scripts never invent names. They record raw evidence per item: route, states, tag, CSS selector, page-coordinate box, alt text, nearest section, natural size, network bytes/content-type. The AI (or a human) reads the generated `media-index.md` and writes `media-selections.json` with **semantic slot names** — `hero-main`, `practice-card-thumb` — never "3rd image in the 7th div".
 4. **Ship SELECTED** — capture-all ≠ ship-all. `promote.mjs` copies only the slots the approved spec chose into `public/clone-assets/{route}/{slot}.{ext}` (the filesystem IS the shipped manifest) and warns per-route at 300 KB.
-5. **Sense gaps** — `visual-diff.mjs` clusters pixel deviations into page-coordinate boxes and flags **likely-empty regions** (clone renders flat where the original has texture = probably a missing media slot). Each cluster cross-references the route's `media.json` boxes, so a hole is diagnosed as *selection gap / promote error / accepted TODO* — deterministically.
+5. **Sense gaps + measure** — `visual-diff.mjs` scores fidelity (100 − changed-pixel %) against `--target` (default 90), clusters pixel deviations into fix-first-ranked page-coordinate boxes, and flags **likely-empty regions** (clone renders flat where the original has texture = probably a missing media slot). Each cluster cross-references the route's `media.json` boxes, so a hole is diagnosed as *selection gap / promote error / accepted TODO* — deterministically.
 
 A media slot with no harvested asset renders a **marked `TODO` placeholder** — never a silently fabricated icon (failure class D).
 
@@ -45,7 +45,7 @@ A media slot with no harvested asset renders a **marked `TODO` placeholder** —
 | **2 Design Model** | design tokens + one spec per section (layout intent, component mapping, 3-layer state, effect types, budget requests) + **media selections** (slot naming). Human review PR — then frozen | `references/phase-2-design-model.md` |
 | **3 Build** | foundation first (tokens → promote media → shadcn primitives → shared inventory → motion primitives → mocks), then N section builders in isolated git worktrees | `references/phase-3-build.md` |
 | **4 Assembly** | deterministic merge order, gates after each merge, ROUTES/sitemap/metadata wiring | `references/phase-4-assembly.md` |
-| **5 QA** | hard gates → interaction sweep → visual-diff sensor report → side-by-side album for the human 80% verdict | `references/phase-5-qa.md` |
+| **5 QA** | hard gates → interaction sweep → visual-diff sensor + **fidelity ascent loop** (sense → fix → re-gate, ≤ 3 rounds/route) → side-by-side album for the human verdict | `references/phase-5-qa.md` |
 
 ## Script inventory
 
@@ -56,7 +56,7 @@ Harvest scripts are **stand-alone `.mjs`** — plain `node`, no build step, no d
 | `scripts/orchestrator.mjs` | THE capture pass. Per route × state × viewport: settle (scroll sweep), record every request, DOM media scan, screenshots/HTML/text, state-chain screenshots. Emits per-route `media.json`, `storage-state.json`, `recon.json` |
 | `scripts/download.mjs` | Separate auth-aware download pass → sha256 store → annotates `media.json` → regenerates `media-index.md` |
 | `scripts/promote.mjs` | Ships `media-selections.json` → `public/clone-assets/{route}/{slot}.{ext}` + `manifest.json`; per-route byte warning |
-| `scripts/visual-diff.mjs` | Diagnostic sensor: canvas pixel diff → deviation clusters (page coords) + empty-render heuristic → JSON + diff PNG + markdown report |
+| `scripts/visual-diff.mjs` | Fidelity meter + diagnostic sensor: fidelity % vs `--target 90`, canvas pixel diff → fix-first deviation clusters (page coords) + empty-render heuristic → JSON + diff PNG + markdown report — never a gate |
 | `scripts/network-capture.mjs` | XHR/fetch fixtures (mock-data source for SPA APIs) |
 | `scripts/interaction-probe.mjs` | Auto scroll/hover/safe-click/canvas-drag sweep with state-change evidence — for unclear screens |
 | `scripts/sourcemap-hunt.mjs` | Finds + downloads source maps from captured script URLs |
@@ -144,18 +144,19 @@ node .claude/skills/web-clone/scripts/download.mjs
 # Phase 3 — dispatcher promotes media once, then builders work in worktrees:
 node .claude/skills/web-clone/scripts/promote.mjs
 
-# Phase 5 — sensor report per screen:
+# Phase 5 — sensor + fidelity score per screen (ascent loop rounds follow the report):
 node .claude/skills/web-clone/scripts/visual-diff.mjs \
   --original _webclone/captures/home/desktop.png --clone <clone-shot.png> \
   --out _webclone/captures/home/diff.json --diff _webclone/captures/home/diff.png \
-  --report _webclone/captures/home/diff.md
+  --report _webclone/captures/home/diff.md \
+  --target 90
 ```
 
 ## Failure classes the skill exists to prevent
 
 | Class | Disease | Enforcement |
 |---|---|---|
-| **A** | Transcription / DRY violations (rebuilt what existed, arbitrary variants, inline styles, deep nesting) | HARD gates A1–A8 in `gates.ts` |
+| **A** | Transcription / DRY violations (rebuilt what existed, arbitrary variants, inline styles, deep nesting) | HARD gates A1–A8 in `gates.ts` — and fidelity NEVER buys a gate violation: an ascent fix that reddens a gate is reverted and logged as an accepted gap |
 | **B** | Half-built architecture (undeclared state, missing validation) | SOFT at spec (Phase 2 rejects) + HARD at two-stage review |
 | **C** | Silent quality rot (a11y slips, `any`, lint debt) | HARD: jsx-a11y + lint + tsc clean |
 | **D** | Fabricated media (placeholder icons substituted for missing assets) | SOFT: spec must map every surface to a slot; HARD: TODO placeholders listed, every sensor "likely-empty" cluster explained |
@@ -165,6 +166,7 @@ node .claude/skills/web-clone/scripts/visual-diff.mjs \
 - **Process** (phases, gates, specs, worktree builders): built 2026-08-17/18 for the `english-learning-app-fe` repo.
 - **Harvest tooling**: adapted from jane/xiaoer's open-source `claude-skill-web-clone` v1.6 (four scripts kept and ported: network-capture, interaction-probe, sourcemap-hunt, visual-diff; four dropped as out-of-scope for the 80/100 goal: init-clone, dna-scaffold, mirror-site, audit-clone). Upstream has no LICENSE file — attribution is retained here by design; do not present this fork as upstream's work.
 - **Media layer + merge**: converged in two BMAD brainstorm sessions on 2026-08-19 (slot-first manifests, capture-all/ship-select, hash store, sensor-not-gate). Full decision record: `brain-webclone-media-manifest-2026-08-19/brainstorm-intent.md` in the source workspace.
+- **90/100 ascent rule** (2026-08-20): the 80% bar was a means (clean code + stable bundle), not an end — so fidelity became a target of **90** climbed by a bounded ascent loop, with clean code and budget as the two non-negotiable invariants.
 - **Known-unverified**: login selectors (`// VERIFY`) and the interaction `states[]` vocabulary are authored per-target at Phase 1 — the layer has passed syntax/boot checks (`node --check`, `--help`) but its first full live run is the next milestone.
 
 ## License

@@ -1,14 +1,18 @@
 #!/usr/bin/env node
 /**
- * web-clone / visual-diff.mjs — the diagnostic SENSOR (2026-08-19 role decision).
+ * web-clone / visual-diff.mjs — the diagnostic SENSOR + fidelity meter
+ * (2026-08-19 sensor role; 2026-08-20 adds the score under the 90/100 ascent rule).
  *
  * Compares original vs clone screenshots in a real browser canvas, then reports
  * WHERE the deviations are: changed-pixel clusters as page-coordinate boxes,
  * plus an empty-render heuristic per cluster (clone side uniformly flat while
  * the original has texture = probably a MISSING MEDIA slot).
  *
- * This is DIAGNOSTIC ONLY — never a pass/fail gate. The 80/100 rule stands:
- * the human eye makes the verdict; this sensor just tells it where to look.
+ * It also computes a fidelity score = 100 − changedPixel% and compares it to
+ * --target (default 90). The score is the PROGRESS METER of the Phase 5
+ * ascent loop — it is STILL NOT A GATE: gates are code quality + budget,
+ * and the final verdict belongs to the human eye. Clusters are ranked by
+ * priority (area × changed-ratio) so the ascent loop knows what to fix first.
  * Cluster boxes cross-reference media.json `dom.box` fields (route manifest).
  *
  * Usage (repo root):
@@ -17,7 +21,8 @@
  *     --clone    .tmp/clone-home/desktop.png \
  *     --out      _webclone/captures/home/diff.json \
  *     --diff     _webclone/captures/home/diff.png \
- *     --report   _webclone/captures/home/diff.md
+ *     --report   _webclone/captures/home/diff.md \
+ *     --target   90
  *
  * --report (markdown sensor report) is optional but recommended.
  */
@@ -31,7 +36,7 @@ const MIN_CELLS = 4; // clusters below this many cells count as noise
 const MAX_CLUSTERS = 12; // report the biggest N
 
 function parseArgs(argv) {
-  const out = { original: "", clone: "", out: "visual-diff.json", diff: "", report: "", threshold: 0.08 };
+  const out = { original: "", clone: "", out: "visual-diff.json", diff: "", report: "", threshold: 0.08, target: 90 };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === "--help" || arg === "-h") out.help = true;
@@ -41,6 +46,7 @@ function parseArgs(argv) {
     else if (arg === "--diff") out.diff = argv[++i] || "";
     else if (arg === "--report") out.report = argv[++i] || "";
     else if (arg === "--threshold") out.threshold = Number(argv[++i] || "0.08");
+    else if (arg === "--target") out.target = Number(argv[++i] || "90");
     else throw new Error(`Unexpected argument: ${arg}`);
   }
   return out;
@@ -53,26 +59,29 @@ function imageDataUrl(file) {
 }
 
 function sensorReport(result) {
+  const gap = Math.round((result.target - result.fidelity) * 10) / 10;
   const lines = [
-    "# Visual-diff sensor report — DIAGNOSTIC ONLY, not a gate",
+    "# Visual-diff sensor report — DIAGNOSTIC + FIDELITY METER, not a gate",
     "",
     `- Original: \`${result.files.original}\` (${result.original.width}×${result.original.height})`,
     `- Clone: \`${result.files.clone}\` (${result.clone.width}×${result.clone.height})`,
     `- diffPixelRatio: **${(result.diffPixelRatio * 100).toFixed(2)}%** · meanAbsDiff: ${result.meanAbsDiff.toFixed(4)} · noise cells: ${result.clusters.noiseCells}`,
+    `- **fidelity: ${result.fidelity}% / target ${result.target}** — ${gap <= 0 ? "target reached ✓ (meter, not a gate — the human eye still rules)" : `gap ${gap} pt → ascent loop continues (see Phase 5 Stage 3b)`}`,
     "",
-    "> The 80/100 verdict belongs to the human eye (Phase 5 album). This report only",
-    "> points AT the deviations. Each cluster box is in page coordinates — look up",
-    "> overlapping `dom.box` entries in the route's `media.json` to check whether the",
-    "> slot is EMPTY (missing media) vs FILLED (layout gap).",
+    "> The verdict belongs to the human eye (Phase 5 album). The score is the ascent",
+    "> loop's PROGRESS METER, never a pass/fail gate — gates are code quality + budget.",
+    "> Each cluster box is in page coordinates — look up overlapping `dom.box` entries",
+    "> in the route's `media.json` to check whether the slot is EMPTY (missing media)",
+    "> vs FILLED (layout gap).",
     "",
-    "## Deviation clusters (biggest first)",
+    "## Deviation clusters (fix-first priority = area × changed-ratio)",
     "",
     "| # | Box (x, y, w, h) | Area changed | Empty-render? |",
     "|---:|---|---:|---|",
   ];
-  result.clusters.list.forEach((cluster, index) => {
+  result.clusters.list.forEach((cluster) => {
     const flag = cluster.emptyRender ? "⚠ LIKELY EMPTY (media missing?)" : cluster.emptyRender === false ? "no" : "?";
-    lines.push(`| ${index + 1} | ${cluster.x}, ${cluster.y}, ${cluster.w}, ${cluster.h} | ${(cluster.changedRatio * 100).toFixed(0)}% | ${flag} |`);
+    lines.push(`| ${cluster.priority} | ${cluster.x}, ${cluster.y}, ${cluster.w}, ${cluster.h} | ${(cluster.changedRatio * 100).toFixed(0)}% | ${flag} |`);
   });
   if (result.clusters.list.length === 0) lines.push("| – | no significant clusters | – | – |");
   const empties = result.clusters.list.filter((cluster) => cluster.emptyRender);
@@ -248,11 +257,13 @@ async function compareInBrowser(page, original, clone, threshold) {
             emptyRender: cloneSpread < 6 && origSpread > 12 ? true : cloneSpread >= 6 ? false : null,
           };
         })
-        .sort((first, second) => second.w * second.h - first.w * first.h)
-        .slice(0, MAX_CLUSTERS);
+        .sort((first, second) => second.w * second.h * second.changedRatio - first.w * first.h * first.changedRatio) // priority: big AND mostly-changed first
+        .slice(0, MAX_CLUSTERS)
+        .map((cluster, index) => ({ ...cluster, priority: index + 1 }));
 
       const noiseCells = [...marked].filter((value) => value === 2).length;
       const pixels = width * height;
+      const diffPixelRatio = changed / pixels;
       return {
         original: { width: left.naturalWidth, height: left.naturalHeight },
         clone: { width: right.naturalWidth, height: right.naturalHeight },
@@ -260,7 +271,8 @@ async function compareInBrowser(page, original, clone, threshold) {
         threshold,
         changedPixels: changed,
         totalPixels: pixels,
-        diffPixelRatio: changed / pixels,
+        diffPixelRatio,
+        fidelity: Math.round((1 - diffPixelRatio) * 1000) / 10, // % — progress meter, not a gate
         meanAbsDiff: sumAbs / pixels,
         rmse: Math.sqrt(sumSq / pixels),
         clusters: { block: BLOCK, noiseCells, list },
@@ -275,7 +287,7 @@ try {
   const args = parseArgs(process.argv.slice(2));
   if (args.help || !args.original || !args.clone) {
     console.log(
-      "visual-diff.mjs --original <png> --clone <png> --out <json> [--diff <png>] [--report <md>] [--threshold 0.08]",
+      "visual-diff.mjs --original <png> --clone <png> --out <json> [--diff <png>] [--report <md>] [--threshold 0.08] [--target 90]",
     );
     process.exit(args.help ? 0 : 1);
   }
@@ -294,7 +306,8 @@ try {
     diff: args.diff ? path.resolve(args.diff) : "",
     report: args.report ? path.resolve(args.report) : "",
   };
-  result.role = "diagnostic sensor — not a gate (80/100 rule)";
+  result.role = "diagnostic sensor + fidelity meter — not a gate (90/100 ascent rule)";
+  result.target = args.target;
 
   fs.mkdirSync(path.dirname(path.resolve(args.out)), { recursive: true });
   fs.writeFileSync(args.out, `${JSON.stringify(result, null, 2)}\n`);

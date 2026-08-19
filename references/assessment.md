@@ -1,16 +1,16 @@
 # Complexity grading & clone scoring
 
-Adapted (EN, 2026-08-19) from jane's web-clone skill — used to set expectations BEFORE recon finishes and to score the result at Phase 5. In this repo the default mode is the **twin clone (80/100)**; the table below tells you when a screen needs extra care or explicit deferral.
+Adapted (EN, 2026-08-19) from jane's web-clone skill — used to set expectations BEFORE recon finishes and to score the result at Phase 5. In this repo the default mode is the **twin clone (90/100 with ascent)**; the table below tells you when a screen needs extra care or explicit deferral.
 
 ## Clone modes
 
 | Mode | Goal | When it applies here |
 |---|---|---|
-| Twin clone (default) | ~80% visual fidelity, 100% idiomatic repo code | Every screen this skill builds |
+| Twin clone (default) | fidelity ≥ route `fidelityTarget` (default **90**, via the Phase 5 ascent loop), 100% idiomatic repo code | Every screen this skill builds |
 | Effect teardown | Don't rebuild yet — first pin down the real implementation | WebGL/Canvas/complex motion; contradictory evidence — see `effect-extraction.md` |
 | Deferred player | Recon now, build in v1.1 | Timer/audio/drag-drop exam players |
 
-(Faithful byte-mirror exists in the archived upstream skill; it is deliberately NOT part of this repo's pipeline — the 80/100 rule has no pixel-gate.)
+(Faithful byte-mirror exists in the archived upstream skill; it is deliberately NOT part of this repo's pipeline — the 90/100 rule has no pixel-gate; the score is a meter.)
 
 ## Complexity L1–L6
 
@@ -29,6 +29,7 @@ Adapted (EN, 2026-08-19) from jane's web-clone skill — used to set expectation
 ## Prediction — <route>
 - Complexity: L_
 - Mode: twin clone / effect teardown / deferred player
+- Fidelity target: 90 (default) — override 80 (low-value route) / 95–98 (hero) with one-line reason
 - High-fidelity parts:
 - Parts to approximate or replace:
 - Parts NOT cloned:
@@ -37,7 +38,7 @@ Adapted (EN, 2026-08-19) from jane's web-clone skill — used to set expectation
 
 ## Post-clone scoring (Phase 5 run report)
 
-Score each dimension 0–5. Only give a score you can back with code, screenshots, or a browser run — an unsupported score is a GUESS (see `effect-extraction.md` grading).
+Score each dimension 0–5. Only give a score you can back with code, screenshots, or a browser run — an unsupported score is a GUESS (see `effect-extraction.md` grading). **Visual fidelity scores against the route's `fidelityTarget`** (default 90): 5 = at/above target with the ascent log to prove it; 3 = ascent ran but accepted gaps remain; 1 = loop never reached the neighborhood.
 
 | Dimension | 5 | 3 | 1 |
 |---|---|---|---|

@@ -4,6 +4,7 @@
 > A spec missing any REQUIRED block is REJECTED (failure class B) — see `references/failure-gates.md`.
 
 - **Route(s):** /…
+- **Fidelity target:** 90 (route default from `screen-inventory.md`; the Phase 5 ascent loop pushes visual-diff toward it — never past a gate or the budget)
 - **Screenshots:** `_webclone/captures/<slug>/desktop.png` (+ tablet/mobile when responsive differs)
 - **Chunk owns:** files this chunk may create (must match `chunks.md`)
 
@@ -77,3 +78,4 @@ Each row maps a visual surface to a slot in `_webclone/design-model/media-select
 - [ ] animation matches the matrix tech; respects reduced-motion; ≥ 30 fps on mid-range Android
 - [ ] Vietnamese copy matches capture `.txt` verbatim
 - [ ] gates green on this chunk's files
+- [ ] Phase 5: visual-diff fidelity ≥ route target, or remaining clusters explained as accepted gaps

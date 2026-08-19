@@ -68,9 +68,9 @@ Replays `storage-state.json` through a standalone API request context (login-gat
 - `node .claude/skills/web-clone/scripts/network-capture.mjs --url <url> --out _webclone/captures/fixtures/<slug>` — XHR/fetch fixtures feeding Phase 2's mock layer.
 - `node .claude/skills/web-clone/scripts/sourcemap-hunt.mjs --recon _webclone/captures/recon.json --out _webclone/captures/sourcemaps` — original source maps, when they exist.
 
-## 6. Capture discipline (the 80% cascade)
+## 6. Capture discipline (the fidelity-target cascade)
 
-- Capture **layout intent** — structure, hierarchy, spacing scale, breakpoints. Do NOT dump per-element computed styles; the 80% bar makes them noise.
+- Capture **layout intent** — structure, hierarchy, spacing scale, breakpoints. Do NOT dump per-element computed styles; the ascent loop's targeted re-checks (Phase 5) make blanket dumps noise.
 - Tag evidence as you go: **SOURCE** (seen in capture/MCP), **PARTIAL** (inferred from responsive variants), **GUESS** (reconstructed). Guesses must be marked so Phase 2 can flag them for the human reviewer. Full discipline: `references/effect-extraction.md`.
 - Vietnamese copy is captured **verbatim** — no translation, no paraphrase.
 - **Media completeness check** before closing the phase: scan `media-index.md` for kinds you expected but didn't land (video? font? lottie-json?) and for `network-only` items with no DOM context — an icon sheet or sprite the DOM scan can't attribute. If a kind is missing, the interaction sweep missed a state: fix routes.json and re-run, don't hand-wave.
