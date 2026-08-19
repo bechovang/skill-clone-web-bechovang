@@ -1,0 +1,25 @@
+{
+  "$comment": "web-clone design tokens — fill from Phase 1 captures. Only tokens specs actually use. Phase 3a maps these into @theme in src/app/globals.css (Tailwind v4). Delete this $comment when done.",
+  "color": {
+    "$note": "Phase 3a maps every color into @theme CSS variables in globals.css — never arbitrary classes (gate A8). If the site themes per age group/brand, record each variant below so theme switching is a variable swap.",
+    "brand": { "primary": "#000000", "onPrimary": "#ffffff" },
+    "semantic": { "success": "#000000", "warning": "#000000", "danger": "#000000", "info": "#000000" },
+    "surfaces": { "background": "#000000", "surface": "#000000", "border": "#000000" },
+    "text": { "primary": "#000000", "secondary": "#000000", "muted": "#000000" },
+    "themeVariants": { "$note": "e.g. grade-3 vs grade-9 palettes — key by theme name, same token keys", "example": {} }
+  },
+  "typography": {
+    "$note": "scale keys map to Tailwind text-* sizes; family goes to fonts.ts / next/font",
+    "fontFamily": { "sans": "TODO-from-capture", "display": "TODO" },
+    "scale": { "h1": "text-4xl", "h2": "text-3xl", "h3": "text-2xl", "body": "text-base", "caption": "text-sm" }
+  },
+  "spacing": {
+    "$note": "record the rhythm the site actually uses, as Tailwind scale steps",
+    "sectionY": "py-12",
+    "cardPadding": "p-4",
+    "gridGap": "gap-4"
+  },
+  "radius": { "default": "rounded-lg", "pill": "rounded-full" },
+  "shadow": { "card": "shadow-sm", "raised": "shadow-md" },
+  "breakpoints": { "$note": "Tailwind defaults unless captures prove otherwise", "values": "sm 640 · md 768 · lg 1024 · xl 1280" }
+}
